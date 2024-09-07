@@ -14,7 +14,10 @@
 
 #include "bedrock/server/server_player.h"
 
+#include <utility>
+
 #include "bedrock/locale/i18n.h"
+#include "bedrock/world/damagesource/actor_damage_source_wrapper.h"
 #include "endstone/detail/hook.h"
 #include "endstone/detail/server.h"
 #include "endstone/event/player/player_death_event.h"
@@ -37,20 +40,12 @@ void ServerPlayer::die(const ActorDamageSource &source)
 
     if (!e->getDeathMessage().empty()) {
         server.getLogger().info(e->getDeathMessage());
-        bool dirty = (e->getDeathMessage() != death_message);
-        for (const auto &player : server.getOnlinePlayers()) {
-            if (player == &endstone_player || !player->hasPermission(EndstoneServer::BroadcastChannelUser)) {
-                continue;
-            }
-            if (dirty) {
-                player->sendMessage(e->getDeathMessage());
-            }
-            else {
-                player->sendMessage({death_cause_message.first, death_cause_message.second});
-            }
+        if (e->getDeathMessage() != death_message) {
+            auto new_source = endstone::detail::ActorDamageSourceWrapper(source, e->getDeathMessage(), {});
+            ENDSTONE_HOOK_CALL_ORIGINAL_NAME(&ServerPlayer::die, __FUNCDNAME__, this, new_source);
+            return;
         }
     }
-
     ENDSTONE_HOOK_CALL_ORIGINAL_NAME(&ServerPlayer::die, __FUNCDNAME__, this, source);
 }
 

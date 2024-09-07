@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <memory>
 
-#include <endstone/detail/boss/boss_bar.h>
+#include <endstone/detail/block/block_data.h>
 
 namespace fs = std::filesystem;
 
@@ -27,9 +27,11 @@ namespace fs = std::filesystem;
 #include "bedrock/core/threading.h"
 #include "bedrock/network/server_network_handler.h"
 #include "bedrock/world/actor/player/player.h"
+#include "bedrock/world/level/block/block_descriptor.h"
 #include "bedrock/world/scores/server_scoreboard.h"
 #include "endstone/color_format.h"
 #include "endstone/command/plugin_command.h"
+#include "endstone/detail/boss/boss_bar.h"
 #include "endstone/detail/command/command_map.h"
 #include "endstone/detail/command/console_command_sender.h"
 #include "endstone/detail/level/level.h"
@@ -312,7 +314,7 @@ void EndstoneServer::setScoreboard(std::unique_ptr<EndstoneScoreboard> scoreboar
     scoreboard_ = std::move(scoreboard);
 }
 
-std::shared_ptr<Scoreboard> EndstoneServer::getNewScoreboard()
+std::shared_ptr<Scoreboard> EndstoneServer::createScoreboard()
 {
     auto registry = CommandSoftEnumRegistry();
     auto board = ServerScoreboard::create(registry, nullptr, level_->getHandle()._getGameplayUserManagerStackRef());
@@ -366,6 +368,31 @@ std::unique_ptr<BossBar> EndstoneServer::createBossBar(std::string title, BarCol
                                                        std::vector<BarFlag> flags) const
 {
     return std::make_unique<EndstoneBossBar>(std::move(title), color, style, flags);
+}
+
+std::shared_ptr<BlockData> EndstoneServer::createBlockData(std::string type) const
+{
+    return createBlockData(type, {});
+}
+
+std::shared_ptr<BlockData> EndstoneServer::createBlockData(std::string type, BlockStates block_states) const
+{
+    std::unordered_map<std::string, std::variant<int, std::string, bool>> states;
+    for (const auto &state : block_states) {
+        std::visit(overloaded{[&](auto &&arg) {
+                       states.emplace(state.first, arg);
+                   }},
+                   state.second);
+    }
+
+    const auto block_descriptor = ScriptModuleMinecraft::ScriptBlockUtils::createBlockDescriptor(type, states);
+    const auto *block = block_descriptor.tryGetBlockNoLogging();
+    if (!block) {
+        getLogger().error("Block type {} cannot be found in the registry.", type);
+        return nullptr;
+    }
+
+    return std::make_unique<EndstoneBlockData>(const_cast<::Block &>(*block));
 }
 
 EndstoneScoreboard &EndstoneServer::getPlayerBoard(const EndstonePlayer &player) const

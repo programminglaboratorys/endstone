@@ -129,9 +129,19 @@ Vec3 const &Actor::getPosPrev() const
     return built_in_components_.state_vector->position_prev;
 }
 
+void Actor::applyImpulse(Vec3 const &impulse)
+{
+    built_in_components_.state_vector->position_delta += impulse;
+}
+
 Vec3 const &Actor::getPosDelta() const
 {
     return built_in_components_.state_vector->position_delta;
+}
+
+void Actor::setPosDelta(const Vec3 &pos_delta)
+{
+    built_in_components_.state_vector->position_delta = pos_delta;
 }
 
 Vec2 const &Actor::getRotation() const
@@ -227,4 +237,10 @@ const AttributeInstance &Actor::getAttribute(const HashedString &name) const
 {
     auto component = getPersistentComponent<AttributesComponent>();
     return component->attributes.getInstance(name);
+}
+
+AttributeInstance &Actor::getMutableAttribute(const HashedString &name)
+{
+    auto component = getPersistentComponent<AttributesComponent>();
+    return component->attributes.getMutableInstance(name);
 }

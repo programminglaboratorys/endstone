@@ -3,18 +3,18 @@ import hashlib
 import logging
 import os
 import platform
-import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
-import tempfile
 from typing import Union
+
 import click
 import requests
+from endstone import __minecraft_version__ as minecraft_version
 from packaging.version import Version
 from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, TimeRemainingColumn
-from endstone import __minecraft_version__ as minecraft_version
 
 
 class Bootstrap:
@@ -217,11 +217,7 @@ class Bootstrap:
             **kwargs: Arbitrary keyword arguments.
 
         """
-        user_base = str((self.plugin_path / ".local").resolve().absolute())
-        shutil.rmtree(user_base, ignore_errors=True)
-
         env = kwargs.pop("env", os.environ.copy())
-        env["PYTHONUSERBASE"] = user_base
         env["PATH"] = os.pathsep.join(sys.path)
         env["PYTHONPATH"] = os.pathsep.join(sys.path)
         env["PYTHONIOENCODING"] = "UTF-8"

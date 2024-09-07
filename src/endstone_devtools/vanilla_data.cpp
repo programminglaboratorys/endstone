@@ -14,90 +14,20 @@
 
 #include "endstone/detail/devtools/vanilla_data.h"
 
-#include <entt/entt.hpp>
 #include <magic_enum/magic_enum.hpp>
 
 #include "bedrock/common/util/bytes_data_output.h"
 #include "bedrock/nbt/nbt_io.h"
 #include "bedrock/network/packet/crafting_data_packet.h"
 #include "bedrock/world/item/registry/creative_item_registry.h"
-#include "bedrock/world/level/dimension/vanilla_dimensions.h"
 #include "bedrock/world/level/block/actor/furnace_block_actor.h"
+#include "bedrock/world/level/dimension/vanilla_dimensions.h"
 #include "endstone/detail/base64.h"
 #include "endstone/detail/devtools/imgui/imgui_json.h"
 #include "endstone/detail/level/level.h"
 #include "endstone/detail/server.h"
 
 namespace endstone::detail::devtools {
-
-nlohmann::json toJson(const Tag &tag)  // NOLINT(*-no-recursion)
-{
-    switch (tag.getId()) {
-    case Tag::Type::Byte: {
-        const auto &t = static_cast<const ByteTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::Short: {
-        const auto &t = static_cast<const ShortTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::Int: {
-        const auto &t = static_cast<const IntTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::Int64: {
-        const auto &t = static_cast<const Int64Tag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::Float: {
-        const auto &t = static_cast<const FloatTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::Double: {
-        const auto &t = static_cast<const DoubleTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::String: {
-        const auto &t = static_cast<const StringTag &>(tag);
-        return t.data;
-    }
-    case Tag::Type::List: {
-        nlohmann::json array;
-        const auto &t = static_cast<const ListTag &>(tag);
-        for (auto i = 0; i < t.size(); i++) {
-            array.push_back(toJson(*t.get(i)));
-        }
-        return array;
-    }
-    case Tag::Type::Compound: {
-        nlohmann::json object;
-        const auto &t = static_cast<const CompoundTag &>(tag);
-        for (const auto &[key, value] : t) {
-            object[key] = toJson(*value.get());
-        }
-        return object;
-    }
-    case Tag::Type::IntArray: {
-        nlohmann::json array;
-        const auto &t = static_cast<const IntArrayTag &>(tag);
-        for (const auto &i : t.data) {
-            array.push_back(i);
-        }
-        return array;
-    }
-    case Tag::Type::ByteArray: {
-        nlohmann::json array;
-        const auto &t = static_cast<const ByteArrayTag &>(tag);
-        for (const auto &i : t.data) {
-            array.push_back(i);
-        }
-        return array;
-    }
-    case Tag::Type::End:
-    default:
-        return {};
-    }
-}
 
 namespace {
 double round(double d)
@@ -116,7 +46,7 @@ void dumpBlockData(VanillaData &data, ::Level &level)
 {
     auto overworld = level.getDimension(VanillaDimensions::Overworld);
     auto &region = overworld->getBlockSourceFromMainChunkSource();
-    auto item_registry = level.getItemRegistry().weak_registry.lock();
+    auto item_registry = level.getItemRegistry();
 
     BlockTypeRegistry::forEachBlock([&](const BlockLegacy &block_legacy) {
         const auto &material = block_legacy.getMaterial();
@@ -154,7 +84,7 @@ void dumpBlockData(VanillaData &data, ::Level &level)
         }
 
         nlohmann::json special_tools;
-        for (const auto &[key, item] : item_registry->getNameToItemMap()) {
+        for (const auto &[key, item] : item_registry.getNameToItemMap()) {
             if (item->canDestroySpecial(*block_legacy.getDefaultState())) {
                 special_tools.push_back(item->getFullItemName());
             }
@@ -200,8 +130,8 @@ void dumpBlockData(VanillaData &data, ::Level &level)
 
 void dumpItemData(VanillaData &data, ::Level &level)
 {
-    auto item_registry = level.getItemRegistry().weak_registry.lock();
-    for (const auto &[key, item] : item_registry->getNameToItemMap()) {
+    auto item_registry = level.getItemRegistry();
+    for (const auto &[key, item] : item_registry.getNameToItemMap()) {
         const auto &name = item->getFullItemName();
         nlohmann::json tags;
         for (const auto &tag : item->getTags()) {
@@ -214,17 +144,15 @@ void dumpItemData(VanillaData &data, ::Level &level)
             data.item_tags[tag_name].push_back(name);
         }
 
-        data.items[name] = {
-            {"id", item->getId()},
-            {"attackDamage", item->getAttackDamage()},
-            {"armorValue", item->getArmorValue()},
-            {"toughnessValue", item->getToughnessValue()},
-            {"maxDamage", item->getMaxDamage()},
-            {"isDamageable", item->isDamageable()},
-            {"maxStackSize", item->getMaxStackSize({})},
-            {"furnaceBurnDuration", FurnaceBlockActor::getBurnDuration(*ItemStack::create(*item), 200)},
-            {"furnaceXPMultiplier", item->getFurnaceXPmultiplier(nullptr)}
-        };
+        data.items[name] = {{"id", item->getId()},
+                            {"attackDamage", item->getAttackDamage()},
+                            {"armorValue", item->getArmorValue()},
+                            {"toughnessValue", item->getToughnessValue()},
+                            {"maxDamage", item->getMaxDamage()},
+                            {"isDamageable", item->isDamageable()},
+                            {"maxStackSize", item->getMaxStackSize({})},
+                            {"furnaceBurnDuration", FurnaceBlockActor::getBurnDuration(*ItemStack::create(*item), 200)},
+                            {"furnaceXPMultiplier", item->getFurnaceXPmultiplier(nullptr)}};
         if (!tags.is_null()) {
             data.items[name]["tags"] = tags;
         }
@@ -278,7 +206,7 @@ void dumpRecipes(VanillaData &data, ::Level &level)
 {
     auto packet = CraftingDataPacket::prepareFromRecipes(level.getRecipes(), false);
     auto id_to_name = [&level](int id) {
-        return level.getItemRegistry().weak_registry.lock()->getItem(id)->getFullItemName();
+        return level.getItemRegistry().getItem(id)->getFullItemName();
     };
 
     for (const auto &entry : packet->crafting_entries) {

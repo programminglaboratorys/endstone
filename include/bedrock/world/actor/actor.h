@@ -54,11 +54,32 @@ class Level;
 
 class Actor {
 public:
+    template <typename Component>
+    [[nodiscard]] bool hasComponent() const
+    {
+        return entity_context_.hasComponent<Component>();
+    }
+
+    template <typename Component>
+    Component *tryGetComponent()
+    {
+        return entity_context_.tryGetComponent<Component>();
+    }
+
+    template <typename Component>
+    Component *tryGetComponent() const
+    {
+        return entity_context_.tryGetComponent<Component>();
+    }
+
+    template <typename Component>
+    gsl::not_null<Component *> getPersistentComponent() const
+    {
+        return entity_context_.tryGetComponent<Component>();
+    };
+
     // virtual bool getStatusFlag(ActorFlags flags) const = 0;
     // virtual void setStatusFlag(ActorFlags flags, bool value) = 0;
-#ifdef _WIN32
-    virtual bool hasComponent(HashedString const &) = 0;
-#endif
     virtual void outOfWorld() = 0;
     virtual void reloadHardcoded(ActorInitializationMethod, VariantParameterList const &) = 0;
     virtual void reloadHardcodedClient(ActorInitializationMethod, VariantParameterList const &) = 0;
@@ -70,9 +91,7 @@ protected:
     virtual void _doInitialMove() = 0;
 
 public:
-#ifdef __linux__
     virtual bool hasComponent(HashedString const &) = 0;
-#endif
     virtual ~Actor() = 0;
     virtual void resetUserPos(bool) = 0;
     virtual ActorType getOwnerEntityType() = 0;
@@ -226,30 +245,6 @@ protected:
     virtual void _doAutoAttackOnTouch(Actor &) = 0;
 
 public:
-    template <typename Component>
-    [[nodiscard]] bool hasComponent() const
-    {
-        return entity_context_.hasComponent<Component>();
-    }
-
-    template <typename Component>
-    Component *tryGetComponent()
-    {
-        return entity_context_.tryGetComponent<Component>();
-    }
-
-    template <typename Component>
-    Component *tryGetComponent() const
-    {
-        return entity_context_.tryGetComponent<Component>();
-    }
-
-    template <typename Component>
-    gsl::not_null<Component *> getPersistentComponent() const
-    {
-        return entity_context_.tryGetComponent<Component>();
-    };
-
     [[nodiscard]] bool getStatusFlag(ActorFlags flags) const;
     [[nodiscard]] bool isType(ActorType type) const;
     [[nodiscard]] bool hasType(ActorType type) const;
@@ -262,7 +257,9 @@ public:
     [[nodiscard]] Level &getLevel() const;
     [[nodiscard]] Vec3 const &getPosition() const;  // NOTE: this returns the eye position instead of feet position
     [[nodiscard]] Vec3 const &getPosPrev() const;
+    void applyImpulse(Vec3 const &impulse);
     [[nodiscard]] Vec3 const &getPosDelta() const;
+    void setPosDelta(const Vec3 &);
     [[nodiscard]] Vec2 const &getRotation() const;
     void setRotationWrapped(const Vec2 &);
     [[nodiscard]] AABB const &getAABB() const;
@@ -274,6 +271,7 @@ public:
     [[nodiscard]] bool isJumping() const;
 
     [[nodiscard]] const AttributeInstance &getAttribute(const HashedString &name) const;  // Endstone
+    [[nodiscard]] AttributeInstance &getMutableAttribute(const HashedString &name);       // Endstone
 
     static Actor *tryGetFromEntity(EntityContext const &, bool include_removed);
 

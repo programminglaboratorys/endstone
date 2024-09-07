@@ -19,7 +19,7 @@
 
 #define ENDSTONE_VERSION_MAJOR 0
 #define ENDSTONE_VERSION_MINOR 5
-#define ENDSTONE_VERSION_PATCH 1
+#define ENDSTONE_VERSION_PATCH 2
 #define ENDSTONE_API_VERSION   ENDSTONE_TOSTRING(ENDSTONE_VERSION_MAJOR) "." ENDSTONE_TOSTRING(ENDSTONE_VERSION_MINOR)
 
 #define ENDSTONE_MAX_PLAYERS 200
@@ -41,3 +41,21 @@
 #elif __linux__
 #define ENDSTONE_VARIANT_WIN32_LINUX(win32, linux) linux
 #endif
+
+namespace endstone {
+/**
+ * @brief Helper type for visitors.
+ * @tparam Func Types of function objects.
+ */
+template <typename... Func>
+struct overloaded : Func... {
+  using Func::operator()...;
+};
+
+/**
+ * @brief Deduction guide.
+ * @tparam Func Types of function objects.
+ */
+template <typename... Func>
+overloaded(Func...) -> overloaded<Func...>;
+}  // namespace endstone

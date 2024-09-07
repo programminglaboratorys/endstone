@@ -14,10 +14,10 @@
 
 #include "endstone/detail/player.h"
 
-#include <bedrock/deps/jsoncpp/nlohmann_json.h>
 #include <boost/uuid/string_generator.hpp>
 #include <magic_enum/magic_enum.hpp>
 
+#include "bedrock/deps/jsoncpp/nlohmann_json.h"
 #include "bedrock/deps/raknet/rak_peer_interface.h"
 #include "bedrock/entity/components/abilities_component.h"
 #include "bedrock/entity/components/user_entity_identifier_component.h"
@@ -320,9 +320,7 @@ void EndstonePlayer::setExpProgress(float progress)
         server_.getLogger().error("Experience progress must be between 0.0 and 1.0 ({})", progress);
         return;
     }
-    auto diff = progress - getExpProgress();
-    auto xp_for_next_level = static_cast<float>(::Player::getXpNeededForLevelRange(getExpLevel(), getExpLevel() + 1));
-    giveExp(static_cast<int>(std::round(diff * xp_for_next_level)));
+    getHandle().getMutableAttribute("minecraft:player.experience").setCurrentValue(progress);
 }
 
 int EndstonePlayer::getExpLevel() const
@@ -556,7 +554,7 @@ void EndstonePlayer::sendForm(FormVariant form)
     auto packet = MinecraftPackets::createPacket(MinecraftPacketIds::ShowModalForm);
     std::shared_ptr<ModalFormRequestPacket> pk = std::static_pointer_cast<ModalFormRequestPacket>(packet);
     pk->form_id = ++form_ids_;
-    pk->form_json = std::visit(entt::overloaded{[](auto &&arg) {
+    pk->form_json = std::visit(overloaded{[](auto &&arg) {
                                    return FormCodec::toJson(arg);
                                }},
                                form)
@@ -587,7 +585,7 @@ void EndstonePlayer::onFormClose(int form_id, PlayerFormCloseReason /*reason*/)
 
     if (!isDead()) {
         try {
-            std::visit(entt::overloaded{[this](auto &&arg) {
+            std::visit(overloaded{[this](auto &&arg) {
                            auto callback = arg.getOnClose();
                            if (callback) {
                                callback(this);
@@ -611,7 +609,7 @@ void EndstonePlayer::onFormResponse(int form_id, const nlohmann::json &json)
 
     if (!isDead()) {
         try {
-            std::visit(entt::overloaded{
+            std::visit(overloaded{
                            [&](const MessageForm &form) {
                                if (auto callback = form.getOnSubmit()) {
                                    callback(this, json.get<bool>() ? 0 : 1);

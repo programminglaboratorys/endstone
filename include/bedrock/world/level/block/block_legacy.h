@@ -26,10 +26,10 @@
 #include "bedrock/world/flip.h"
 #include "bedrock/world/level/block/block_component_storage.h"
 #include "bedrock/world/level/block/block_property.h"
+#include "bedrock/world/level/block/block_state_instance.h"
 #include "bedrock/world/level/block_pos.h"
 #include "bedrock/world/level/material/material.h"
 #include "bedrock/world/phys/aabb.h"
-#include "block_state_instance.h"
 
 using Brightness = std::uint8_t;
 using FacingID = std::uint8_t;
@@ -360,7 +360,7 @@ private:
     bool enable_data_driven_vanilla_blocks_and_items_;                // +648
     AABB visual_shape_;                                               // +652
     std::int64_t unknown3_;                                           // +680
-    std::map<std::uint64_t, BlockStateInstance> states_;              // +688 void* = BlockStateInstance
+    std::map<std::uint64_t, BlockStateInstance> states_;              // +688
     std::unordered_map<HashedString, std::uint64_t> state_name_map_;  // +704
     BlockState *creative_enum_state_;                                 // +768
     std::vector<std::unique_ptr<Block>> block_permutations_;          // +776
@@ -369,7 +369,7 @@ private:
 #ifdef __linux__                                                      //
     std::shared_timed_mutex mutex_;
 #else                                                  //
-    std::int64_t unknown5_;  // +832
+    std::shared_mutex mutex_;  // +832
 #endif                                                 //
     std::unordered_map<void *, void *> unknown6_;      // +840
     std::unique_ptr<void *> block_state_group_;        // +904 void* = BlockStateGroup

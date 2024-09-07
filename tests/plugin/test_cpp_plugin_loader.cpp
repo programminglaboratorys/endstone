@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "bedrock/world/level/level.h"
+#include "endstone/block/block_data.h"
 #include "endstone/detail/logger_factory.h"
 #include "endstone/detail/plugin/cpp_plugin_loader.h"
 #include "endstone/scheduler/scheduler.h"
@@ -50,7 +51,7 @@ public:
     MOCK_METHOD(void, broadcastMessage, (const std::string &), (const, override));
     MOCK_METHOD(bool, isPrimaryThread, (), (const, override));
     MOCK_METHOD(endstone::Scoreboard *, getScoreboard, (), (const, override));
-    MOCK_METHOD(std::shared_ptr<endstone::Scoreboard>, getNewScoreboard, (), (override));
+    MOCK_METHOD(std::shared_ptr<endstone::Scoreboard>, createScoreboard, (), (override));
     MOCK_METHOD(float, getCurrentMillisecondsPerTick, (), (override));
     MOCK_METHOD(float, getAverageMillisecondsPerTick, (), (override));
     MOCK_METHOD(float, getCurrentTicksPerSecond, (), (override));
@@ -62,6 +63,9 @@ public:
                 (std::string, endstone::BarColor, endstone::BarStyle), (const, override));
     MOCK_METHOD(std::unique_ptr<endstone::BossBar>, createBossBar,
                 (std::string, endstone::BarColor, endstone::BarStyle, std::vector<endstone::BarFlag>),
+                (const, override));
+    MOCK_METHOD(std::shared_ptr<endstone::BlockData>, createBlockData, (std::string), (const, override));
+    MOCK_METHOD(std::shared_ptr<endstone::BlockData>, createBlockData, (std::string, endstone::BlockStates),
                 (const, override));
     MockServer()
     {

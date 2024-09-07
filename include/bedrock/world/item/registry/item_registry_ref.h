@@ -16,9 +16,18 @@
 
 #include <memory>
 
+#include "bedrock/core/hashed_string.h"
+#include "bedrock/world/item/item.h"
 #include "bedrock/world/item/registry/item_registry.h"
 
 class ItemRegistryRef {
 public:
-    std::weak_ptr<ItemRegistry> weak_registry;
+    [[nodiscard]] WeakPtr<Item> getItem(const HashedString &name) const;
+    [[nodiscard]] WeakPtr<Item> getItem(int id) const;
+    [[nodiscard]] const std::unordered_map<HashedString, WeakPtr<Item>> &getNameToItemMap() const;
+
+private:
+    [[nodiscard]] std::shared_ptr<ItemRegistry> _lockRegistry() const;  // NOLINT
+
+    std::weak_ptr<ItemRegistry> weak_registry_;
 };

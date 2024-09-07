@@ -38,120 +38,64 @@ const std::unordered_map<std::string, void *> &get_detours();
 }  // namespace endstone::detail::hook
 
 namespace endstone::detail::hook {
+
 /**
- * @brief Construct a std::function from a function pointer
+ * @brief Gets the original function pointer from a detour function pointer
  */
 template <typename Return, typename... Arg>
-std::function<Return(Arg...)> get_original(Return (*fp)(Arg...), std::optional<std::string> name = std::nullopt)
+Return (*get_original(Return (*fp)(Arg...), std::optional<std::string> name = std::nullopt))(Arg...)
 {
     auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-    return reinterpret_cast<Return (*)(Arg...)>(original);
+    return *reinterpret_cast<decltype(&fp)>(&original);
 }
 
 /**
- * @brief Construct a std::function from a class method (non-const, no ref-qualifier)
+ * @brief Gets the original member function pointer from a detour member function pointer (non-const, no ref-qualifier)
  */
 template <typename Return, typename Class, typename... Arg>
-std::function<Return(Class *, Arg...)> get_original(Return (Class::*fp)(Arg...),
-                                                    std::optional<std::string> name = std::nullopt)
+Return (Class:: *get_original(Return (Class:: *fp)(Arg...), std::optional<std::string> name = std::nullopt))(Arg...)
 {
-    auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-    auto func = reinterpret_cast<Return (*)(Class *, Arg...)>(original);
-    return [func](Class *obj, Arg... args) -> Return {
-        return func(obj, std::forward<Arg>(args)...);
-    };
+    void *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
+    struct {  // https://doi.org/10.1145/3660779
+        void *ptr;
+        std::size_t adj = 0;
+    } temp;
+    temp.ptr = original;
+    return *reinterpret_cast<decltype(&fp)>(&temp);
 }
 
 /**
- * @brief Construct a std::function from a class method (const, no ref-qualifier)
+ * @brief Gets the original member function pointer from a detour member function pointer (const, no ref-qualifier)
  */
 template <typename Return, typename Class, typename... Arg>
-std::function<Return(const Class *, Arg...)> get_original(Return (Class::*fp)(Arg...) const,
-                                                          std::optional<std::string> name = std::nullopt)
+Return (Class:: *get_original(Return (Class:: *fp)(Arg...) const,
+                              std::optional<std::string> name = std::nullopt))(Arg...) const
 {
-    auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-    auto func = reinterpret_cast<Return (*)(const Class *, Arg...)>(original);
-    return [func](const Class *obj, Arg... args) -> Return {
-        return func(obj, std::forward<Arg>(args)...);
-    };
+    void *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
+    struct {  // https://doi.org/10.1145/3660779
+        void *ptr;
+        std::size_t adj = 0;
+    } temp;
+    temp.ptr = original;
+    return *reinterpret_cast<decltype(&fp)>(&temp);
 }
+
 }  // namespace endstone::detail::hook
-#define ENDSTONE_HOOK_CALL_ORIGINAL(fp, ...)            endstone::detail::hook::get_original(fp)(__VA_ARGS__)
-#define ENDSTONE_HOOK_CALL_ORIGINAL_NAME(fp, name, ...) endstone::detail::hook::get_original(fp, name)(__VA_ARGS__)
-
-namespace endstone::detail::hook {
-/**
- * @brief Construct a std::function from a function pointer
- * with Return Value Optimization (RVO).
- */
-template <typename Return, typename... Arg>
-std::function<Return *(Return *, Arg...)> get_original_rvo(Return (*fp)(Arg...),
-                                                           std::optional<std::string> name = std::nullopt)
-{
-    auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-    return reinterpret_cast<Return *(*)(Return *, Arg...)>(original);
-}
-
-/**
- * @brief Construct a std::function from a class method (non-const, no ref-qualifier)
- * with Return Value Optimization (RVO).
- */
-template <typename Return, typename Class, typename... Arg>
-std::function<Return *(Return *, Class *, Arg...)> get_original_rvo(Return (Class::*fp)(Arg...),
-                                                                    std::optional<std::string> name = std::nullopt)
-{
-    auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-#ifdef _WIN32
-    auto func = reinterpret_cast<Return *(*)(Class *, Return *, Arg...)>(original);
-    return [func](Return *ret, Class *obj, Arg... args) -> Return * {
-        return func(obj, ret, std::forward<Arg>(args)...);
-    };
-#elif __linux__
-    auto func = reinterpret_cast<Return *(*)(Return *, Class *, Arg...)>(original);
-    return [func](Return *ret, Class *obj, Arg... args) -> Return * {
-        return func(ret, obj, std::forward<Arg>(args)...);
-    };
-#endif
-}
-
-/**
- * @brief Construct a std::function from a class method (const, no ref-qualifier)
- * with Return Value Optimization (RVO).
- */
-template <typename Return, typename Class, typename... Arg>
-std::function<Return *(Return *, const Class *, Arg...)> get_original_rvo(
-    Return (Class::*fp)(Arg...) const, std::optional<std::string> name = std::nullopt)
-{
-    auto *original = name.has_value() ? get_original(name.value()) : get_original(fp_cast(fp));
-#ifdef _WIN32
-    auto func = reinterpret_cast<Return *(*)(const Class *, Return *, Arg...)>(original);
-    return [func](Return *ret, const Class *obj, Arg... args) -> Return * {
-        return func(obj, ret, std::forward<Arg>(args)...);
-    };
-#elif __linux__
-    auto func = reinterpret_cast<Return *(*)(Return *, const Class *, Arg...)>(original);
-    return [func](Return *ret, const Class *obj, Arg... args) -> Return * {
-        return func(ret, obj, std::forward<Arg>(args)...);
-    };
-#endif
-}
-}  // namespace endstone::detail::hook
-
-#define ENDSTONE_HOOK_CALL_ORIGINAL_RVO(fp, ret, ...) *endstone::detail::hook::get_original_rvo(fp)(&ret, __VA_ARGS__)
-#define ENDSTONE_HOOK_CALL_ORIGINAL_RVO_NAME(fp, name, ret, ...) \
-    *endstone::detail::hook::get_original_rvo(fp, name)(&ret, __VA_ARGS__)
+#define ENDSTONE_HOOK_CALL_ORIGINAL(fp, ...) std::invoke(endstone::detail::hook::get_original(fp), ##__VA_ARGS__)
+#define ENDSTONE_HOOK_CALL_ORIGINAL_NAME(fp, name, ...) \
+    std::invoke(endstone::detail::hook::get_original(fp, name), ##__VA_ARGS__)
 
 namespace endstone::detail::hook {
 #ifdef _WIN32
 template <typename Class, typename... Args>
-std::function<Class *(Class *, Args...)> get_ctor(std::unique_ptr<Class> (*)(Args...), const std::string &name)
+Class *(*get_ctor(std::unique_ptr<Class> (*)(Args...), const std::string &name))(Class *, Args...)
 {
     auto *original = get_original(name);
     return reinterpret_cast<Class *(*)(Class *, Args...)>(original);
 }
 #elif __linux__
 template <typename Class, typename... Args>
-std::function<void(Class *, Args...)> get_ctor(std::unique_ptr<Class> (*)(Args...), const std::string &name)
+void (*get_ctor(std::unique_ptr<Class> (*)(Args...), const std::string &name))(Class *, Args...)
 {
     auto *original = get_original(name);
     return reinterpret_cast<void (*)(Class *, Args...)>(original);
@@ -169,14 +113,16 @@ std::function<void(Class *, Args...)> get_ctor(std::unique_ptr<Class> (*)(Args..
     "_ZN" + std::to_string(std::strlen(ENDSTONE_TOSTRING(type))) + ENDSTONE_TOSTRING(type) "C2"
 #endif
 
-#define ENDSTONE_FACTORY_IMPLEMENT(type, ...)                                                           \
+#define ENDSTONE_FACTORY_IMPLEMENT(type, ...) ENDSTONE_FACTORY_IMPLEMENT_OVERLOAD(type, &type::create, ##__VA_ARGS__)
+
+#define ENDSTONE_FACTORY_IMPLEMENT_OVERLOAD(type, fp, ...)                                              \
     {                                                                                                   \
         static std::string func_decorated_name = __FUNCDNAME__;                                         \
-        static std::string __name =                                                                       \
+        static std::string __name =                                                                     \
             ENDSTONE_FACTORY_PREFIX_REPLACEMENT(type) +                                                 \
             func_decorated_name.substr(func_decorated_name.find(ENDSTONE_FACTORY_PREFIX_TARGET(type)) + \
                                        std::strlen(ENDSTONE_FACTORY_PREFIX_TARGET(type)));              \
         auto *obj = reinterpret_cast<type *>(new char[sizeof(type)]);                                   \
-        endstone::detail::hook::get_ctor(&type::create, __name)(obj, __VA_ARGS__);                        \
+        endstone::detail::hook::get_ctor(fp, __name)(obj, ##__VA_ARGS__);                               \
         return std::unique_ptr<type>(obj);                                                              \
     }

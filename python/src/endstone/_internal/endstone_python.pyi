@@ -4,7 +4,7 @@ import numpy
 import os
 import typing
 import uuid
-__all__ = ['ActionForm', 'Actor', 'ActorDeathEvent', 'ActorEvent', 'ActorRemoveEvent', 'ActorSpawnEvent', 'ActorTeleportEvent', 'BarColor', 'BarFlag', 'BarStyle', 'Block', 'BlockFace', 'BossBar', 'BroadcastMessageEvent', 'ColorFormat', 'Command', 'CommandExecutor', 'CommandSender', 'ConsoleCommandSender', 'Criteria', 'Dimension', 'DisplaySlot', 'Dropdown', 'Event', 'EventPriority', 'GameMode', 'Inventory', 'Label', 'Level', 'Location', 'Logger', 'MessageForm', 'Mob', 'ModalForm', 'Objective', 'ObjectiveSortOrder', 'Packet', 'PacketType', 'Permissible', 'Permission', 'PermissionAttachment', 'PermissionAttachmentInfo', 'PermissionDefault', 'Player', 'PlayerChatEvent', 'PlayerCommandEvent', 'PlayerDeathEvent', 'PlayerEvent', 'PlayerInventory', 'PlayerJoinEvent', 'PlayerLoginEvent', 'PlayerQuitEvent', 'PlayerTeleportEvent', 'Plugin', 'PluginCommand', 'PluginDescription', 'PluginDisableEvent', 'PluginEnableEvent', 'PluginLoadOrder', 'PluginLoader', 'PluginManager', 'Position', 'RenderType', 'Scheduler', 'Score', 'Scoreboard', 'Server', 'ServerCommandEvent', 'ServerListPingEvent', 'ServerLoadEvent', 'Skin', 'Slider', 'SocketAddress', 'SpawnParticleEffectPacket', 'StepSlider', 'Task', 'TextInput', 'ThunderChangeEvent', 'Toggle', 'Translatable', 'Vector', 'WeatherChangeEvent']
+__all__ = ['ActionForm', 'Actor', 'ActorDeathEvent', 'ActorEvent', 'ActorKnockbackEvent', 'ActorRemoveEvent', 'ActorSpawnEvent', 'ActorTeleportEvent', 'BarColor', 'BarFlag', 'BarStyle', 'Block', 'BlockBreakEvent', 'BlockData', 'BlockEvent', 'BlockFace', 'BlockPlaceEvent', 'BlockState', 'BossBar', 'BroadcastMessageEvent', 'ColorFormat', 'Command', 'CommandExecutor', 'CommandSender', 'ConsoleCommandSender', 'Criteria', 'Dimension', 'DisplaySlot', 'Dropdown', 'Event', 'EventPriority', 'GameMode', 'Inventory', 'ItemStack', 'Label', 'Level', 'Location', 'Logger', 'MessageForm', 'Mob', 'ModalForm', 'Objective', 'ObjectiveSortOrder', 'Packet', 'PacketType', 'Permissible', 'Permission', 'PermissionAttachment', 'PermissionAttachmentInfo', 'PermissionDefault', 'Player', 'PlayerChatEvent', 'PlayerCommandEvent', 'PlayerDeathEvent', 'PlayerEvent', 'PlayerInteractActorEvent', 'PlayerInteractEvent', 'PlayerInventory', 'PlayerJoinEvent', 'PlayerKickEvent', 'PlayerLoginEvent', 'PlayerQuitEvent', 'PlayerTeleportEvent', 'Plugin', 'PluginCommand', 'PluginDescription', 'PluginDisableEvent', 'PluginEnableEvent', 'PluginLoadOrder', 'PluginLoader', 'PluginManager', 'Position', 'RenderType', 'Scheduler', 'Score', 'Scoreboard', 'Server', 'ServerCommandEvent', 'ServerListPingEvent', 'ServerLoadEvent', 'Skin', 'Slider', 'SocketAddress', 'SpawnParticleEffectPacket', 'StepSlider', 'Task', 'TextInput', 'ThunderChangeEvent', 'Toggle', 'Translatable', 'Vector', 'WeatherChangeEvent']
 class ActionForm:
     """
     Represents a form with buttons that let the player take action.
@@ -166,6 +166,28 @@ class ActorEvent(Event):
         """
         Returns the Actor involved in this event
         """
+class ActorKnockbackEvent(ActorEvent):
+    """
+    Called when a living entity receives knockback.
+    """
+    @property
+    def actor(self) -> Mob:
+        """
+        Returns the Mob involved in this event
+        """
+    @property
+    def knockback(self) -> Vector:
+        """
+        Gets or sets the knockback that will be applied to the entity.
+        """
+    @knockback.setter
+    def knockback(self, arg1: Vector) -> None:
+        ...
+    @property
+    def source(self) -> Actor:
+        """
+        Get the source actor that has caused knockback to the defender, if exists.
+        """
 class ActorRemoveEvent(ActorEvent):
     """
     Called when an Actor is removed.
@@ -295,6 +317,8 @@ class Block:
     """
     Represents a block.
     """
+    def __str__(self) -> str:
+        ...
     @typing.overload
     def get_relative(self, offset_x: int, offset_y: int, offset_z: int) -> Block:
         """
@@ -305,6 +329,22 @@ class Block:
         """
         Gets the block at the given distance of the given face
         """
+    def set_data(self, data: BlockData, apply_physics: bool = True) -> None:
+        """
+        Sets the complete data for this block
+        """
+    def set_type(self, type: str, apply_physics: bool = True) -> None:
+        """
+        Sets the type of this block
+        """
+    @property
+    def data(self) -> BlockData:
+        """
+        Gets or sets the complete data for this block
+        """
+    @data.setter
+    def data(self, arg1: BlockData) -> None:
+        ...
     @property
     def dimension(self) -> Dimension:
         """
@@ -318,8 +358,11 @@ class Block:
     @property
     def type(self) -> str:
         """
-        Get the type of the block.
+        Gets or sets the type of the block.
         """
+    @type.setter
+    def type(self, arg1: str) -> None:
+        ...
     @property
     def x(self) -> int:
         """
@@ -335,19 +378,48 @@ class Block:
         """
         Gets the z-coordinate of this block
         """
+class BlockBreakEvent(BlockEvent):
+    """
+    Called when a block is broken by a player.
+    """
+    @property
+    def player(self) -> Player:
+        """
+        Gets the Player that is breaking the block involved in this event.
+        """
+class BlockData:
+    """
+    Represents the data related to a live block
+    """
+    def __str__(self) -> str:
+        ...
+    @property
+    def block_states(self) -> dict[str, bool | str | int]:
+        """
+        Gets the block states for this block.
+        """
+    @property
+    def type(self) -> str:
+        """
+        Get the block type represented by this block data.
+        """
+class BlockEvent(Event):
+    """
+    Represents an Block-related event
+    """
+    @property
+    def block(self) -> Block:
+        """
+        Gets the block involved in this event.
+        """
 class BlockFace:
-    DOWN: typing.ClassVar[BlockFace]  # value = <BlockFace.DOWN: 5>
-    EAST: typing.ClassVar[BlockFace]  # value = <BlockFace.EAST: 1>
-    NORTH: typing.ClassVar[BlockFace]  # value = <BlockFace.NORTH: 0>
-    NORTH_EAST: typing.ClassVar[BlockFace]  # value = <BlockFace.NORTH_EAST: 6>
-    NORTH_WEST: typing.ClassVar[BlockFace]  # value = <BlockFace.NORTH_WEST: 7>
-    SELF: typing.ClassVar[BlockFace]  # value = <BlockFace.SELF: -1>
-    SOUTH: typing.ClassVar[BlockFace]  # value = <BlockFace.SOUTH: 2>
-    SOUTH_EAST: typing.ClassVar[BlockFace]  # value = <BlockFace.SOUTH_EAST: 8>
-    SOUTH_WEST: typing.ClassVar[BlockFace]  # value = <BlockFace.SOUTH_WEST: 9>
-    UP: typing.ClassVar[BlockFace]  # value = <BlockFace.UP: 4>
-    WEST: typing.ClassVar[BlockFace]  # value = <BlockFace.WEST: 3>
-    __members__: typing.ClassVar[dict[str, BlockFace]]  # value = {'SELF': <BlockFace.SELF: -1>, 'NORTH': <BlockFace.NORTH: 0>, 'EAST': <BlockFace.EAST: 1>, 'SOUTH': <BlockFace.SOUTH: 2>, 'WEST': <BlockFace.WEST: 3>, 'UP': <BlockFace.UP: 4>, 'DOWN': <BlockFace.DOWN: 5>, 'NORTH_EAST': <BlockFace.NORTH_EAST: 6>, 'NORTH_WEST': <BlockFace.NORTH_WEST: 7>, 'SOUTH_EAST': <BlockFace.SOUTH_EAST: 8>, 'SOUTH_WEST': <BlockFace.SOUTH_WEST: 9>}
+    DOWN: typing.ClassVar[BlockFace]  # value = <BlockFace.DOWN: 0>
+    EAST: typing.ClassVar[BlockFace]  # value = <BlockFace.EAST: 5>
+    NORTH: typing.ClassVar[BlockFace]  # value = <BlockFace.NORTH: 2>
+    SOUTH: typing.ClassVar[BlockFace]  # value = <BlockFace.SOUTH: 3>
+    UP: typing.ClassVar[BlockFace]  # value = <BlockFace.UP: 1>
+    WEST: typing.ClassVar[BlockFace]  # value = <BlockFace.WEST: 4>
+    __members__: typing.ClassVar[dict[str, BlockFace]]  # value = {'DOWN': <BlockFace.DOWN: 0>, 'UP': <BlockFace.UP: 1>, 'NORTH': <BlockFace.NORTH: 2>, 'SOUTH': <BlockFace.SOUTH: 3>, 'WEST': <BlockFace.WEST: 4>, 'EAST': <BlockFace.EAST: 5>}
     def __eq__(self, other: typing.Any) -> bool:
         ...
     def __getstate__(self) -> int:
@@ -374,6 +446,86 @@ class BlockFace:
     @property
     def value(self) -> int:
         ...
+class BlockPlaceEvent(BlockEvent):
+    """
+    Called when a block is placed by a player.
+    """
+    @property
+    def block_against(self) -> Block:
+        """
+        Gets the block that this block was placed against
+        """
+    @property
+    def block_placed_state(self) -> BlockState:
+        """
+        Gets the BlockState for the block which was placed.
+        """
+    @property
+    def block_replaced(self) -> Block:
+        """
+        Gets the block which was replaced.
+        """
+    @property
+    def player(self) -> Player:
+        """
+        Gets the player who placed the block involved in this event.
+        """
+class BlockState:
+    """
+    Represents a captured state of a block, which will not update automatically.
+    """
+    def __str__(self) -> str:
+        ...
+    def update(self, force: bool = False, apply_physics: bool = True) -> bool:
+        """
+        Attempts to update the block represented by this state.
+        """
+    @property
+    def block(self) -> Block:
+        """
+        Gets the block represented by this block state.
+        """
+    @property
+    def data(self) -> BlockData:
+        """
+        Gets or sets the data for this block state.
+        """
+    @data.setter
+    def data(self, arg1: BlockData) -> None:
+        ...
+    @property
+    def dimension(self) -> Dimension:
+        """
+        Gets the dimension which contains the block represented by this block state.
+        """
+    @property
+    def location(self) -> Location:
+        """
+        Gets the location of this block state.
+        """
+    @property
+    def type(self) -> str:
+        """
+        Gets or sets the type of this block state.
+        """
+    @type.setter
+    def type(self, arg1: str) -> None:
+        ...
+    @property
+    def x(self) -> int:
+        """
+        Gets the x-coordinate of this block state.
+        """
+    @property
+    def y(self) -> int:
+        """
+        Gets the y-coordinate of this block state.
+        """
+    @property
+    def z(self) -> int:
+        """
+        Gets the z-coordinate of this block state.
+        """
 class BossBar:
     """
     Represents a boss bar that is displayed to players.
@@ -905,6 +1057,28 @@ class Inventory:
         """
         Returns the size of the inventory
         """
+class ItemStack:
+    """
+    Represents a stack of items.
+    """
+    def __init__(self, type: str = 'minecraft:air', amount: int = 1) -> None:
+        ...
+    @property
+    def amount(self) -> int:
+        """
+        Gets or sets the amount of items in this stack.
+        """
+    @amount.setter
+    def amount(self, arg1: int) -> None:
+        ...
+    @property
+    def type(self) -> str:
+        """
+        Gets or sets the type of this item.
+        """
+    @type.setter
+    def type(self, arg1: str) -> None:
+        ...
 class Label:
     """
     Represents a text label.
@@ -1760,6 +1934,49 @@ class PlayerEvent(Event):
         """
         Returns the player involved in this event.
         """
+class PlayerInteractActorEvent(PlayerEvent):
+    """
+    Represents an event that is called when a player right-clicks an actor.
+    """
+    @property
+    def actor(self) -> Actor:
+        """
+        Gets the actor that was right-clicked by the player.
+        """
+class PlayerInteractEvent(PlayerEvent):
+    """
+    Represents an event that is called when a player right-clicks a block.
+    """
+    @property
+    def block(self) -> Block:
+        """
+        Returns the clicked block
+        """
+    @property
+    def block_face(self) -> BlockFace:
+        """
+        Returns the face of the block that was clicked
+        """
+    @property
+    def clicked_position(self) -> Vector:
+        """
+        Gets the exact position on the block the player interacted with.
+        """
+    @property
+    def has_block(self) -> bool:
+        """
+        Check if this event involved a block
+        """
+    @property
+    def has_item(self) -> bool:
+        """
+        Check if this event involved an item
+        """
+    @property
+    def item(self) -> ItemStack:
+        """
+        Returns the item in hand represented by this event
+        """
 class PlayerInventory(Inventory):
     """
     Interface to the inventory of a Player, including the four armor slots and any extra slots.
@@ -1768,6 +1985,18 @@ class PlayerJoinEvent(PlayerEvent):
     """
     Called when a player joins a server
     """
+class PlayerKickEvent(PlayerEvent):
+    """
+    Called when a player gets kicked from the server
+    """
+    @property
+    def reason(self) -> str:
+        """
+        Gets or sets the reason why the player is getting kicked
+        """
+    @reason.setter
+    def reason(self, arg1: str) -> None:
+        ...
 class PlayerLoginEvent(PlayerEvent):
     """
     Called when a player attempts to login in.
@@ -2308,17 +2537,21 @@ class Server:
         """
         Broadcasts the specified message to every user with permission endstone.broadcast.user
         """
+    def create_block_data(self, type: str, block_states: dict[str, bool | str | int] | None = None) -> BlockData:
+        """
+        Creates a new BlockData instance for the specified block type, with all properties initialized to defaults, except for those provided.
+        """
     def create_boss_bar(self, title: str, color: BarColor, style: BarStyle, flags: list[BarFlag] | None = None) -> BossBar:
         """
         Creates a boss bar instance to display to players. The progress defaults to 1.0.
         """
+    def create_scoreboard(self) -> Scoreboard:
+        """
+        Creates a new Scoreboard to be tracked by the server.
+        """
     def dispatch_command(self, sender: CommandSender, command: str) -> bool:
         """
         Dispatches a command on this server, and executes it if found.
-        """
-    def get_new_scoreboard(self) -> Scoreboard:
-        """
-        Gets a new Scoreboard to be tracked by the server.
         """
     @typing.overload
     def get_player(self, name: str) -> Player:

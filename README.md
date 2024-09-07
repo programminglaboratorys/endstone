@@ -14,13 +14,14 @@
 [![Windows](https://github.com/EndstoneMC/endstone/actions/workflows/windows.yml/badge.svg)](https://github.com/EndstoneMC/endstone/actions/workflows/windows.yml)
 [![Linux](https://github.com/EndstoneMC/endstone/actions/workflows/linux.yml/badge.svg)](https://github.com/EndstoneMC/endstone/actions/workflows/linux.yml)
 [![Documentation](https://github.com/EndstoneMC/endstone/actions/workflows/docs.yml/badge.svg)](https://endstone.dev/)
-[![Minecraft - Version](https://img.shields.io/badge/minecraft-v1.21.20%20(Bedrock)-green)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
+[![Minecraft - Version](https://img.shields.io/badge/minecraft-v1.21.22_(Bedrock)-green)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
 [![PyPI - Version](https://img.shields.io/pypi/v/endstone)](https://pypi.org/project/endstone)
 [![Python](https://img.shields.io/pypi/pyversions/endstone?logo=python&logoColor=white)](https://www.python.org/)
 [![GitHub License](https://img.shields.io/github/license/endstonemc/endstone)](LICENSE)
 [![Codacy Badge](https://img.shields.io/codacy/grade/8877402fc70b40f5a8c4b325d890e3f7?logo=codacy)](https://app.codacy.com/gh/EndstoneMC/endstone/dashboard)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
 [![Discord](https://img.shields.io/discord/1230982180742631457?logo=discord&logoColor=white&color=5865F2)](https://discord.gg/xxgPuc2XN9)
+[![Ko-Fi](https://img.shields.io/badge/Buy_Me_a_Coffee-f37574?logo=kofi&logoColor=white)](https://ko-fi.com/EndstoneMC)
 
 </div>
 
@@ -81,6 +82,57 @@ pip install endstone
 endstone
 ```
 
+### 🐧 Linux
+
+Endstone can be easily installed on Linux using an autoinstaller script.
+
+#### Supported Operating Systems
+
+The autoinstaller supports the following operating systems and distributions based on them:
+
+- Ubuntu
+- Debian
+- Fedora
+- Arch Linux
+
+#### Download the Installer
+
+You can use either `wget` or `curl` to download the required scripts.
+
+**Using `wget`:**
+
+```shell
+wget https://raw.githubusercontent.com/EndstoneMC/endstone/main/scripts/autoinstall.sh
+sudo chmod +x autoinstall.sh
+wget https://raw.githubusercontent.com/EndstoneMC/endstone/main/scripts/start.sh
+sudo chmod +x start.sh
+```
+
+**Using `curl`:**
+
+```shell
+curl -O https://raw.githubusercontent.com/EndstoneMC/endstone/main/scripts/autoinstall.sh
+sudo chmod +x autoinstall.sh
+curl -O https://raw.githubusercontent.com/EndstoneMC/endstone/main/scripts/start.sh
+sudo chmod +x start.sh
+```
+
+#### Install and Start Endstone
+
+Once the download is complete, run the following command to install Endstone:
+
+```shell
+./autoinstall.sh
+```
+
+This will install Endstone and automatically start the server after installation.
+
+If you want to start Endstone at any time, simply run:
+
+```shell
+./start.sh
+```
+
 ### 🐳 Docker
 
 [![Docker](https://github.com/EndstoneMC/endstone/actions/workflows/docker.yml/badge.svg)](https://github.com/EndstoneMC/endstone/actions/workflows/docker.yml)
@@ -121,7 +173,7 @@ endstone
 | Build System                     | CMake                         | CMake    |
 | Generator                        | Ninja                         | Ninja    |
 | C/C++ Compiler **(Recommended)** | MSVC 193 (Visual Studio 2022) | Clang 15 |
-| C/C++ Compiler (Minimum)         | MSVC 191 (Visual Studio 2017) | Clang 5  |
+| C/C++ Compiler (Minimum)         | MSVC 191 (Visual Studio 2017) | Clang 9  |
 | Standard Library                 | MSVC STL                      | libc++   |
 
 ## 🌟 Plugins [🔝](#-table-of-contents)
@@ -141,9 +193,8 @@ previous experience with Bukkit, you should find the API particularly intuitive 
 | **🎈 Event System**                      | 2-3 months | ✅    | v0.4.0 |
 | **🖼 Form & Scoreboard API**             | 1-2 months | ✅    | v0.5.0 |
 | **👤 Player & Actor API**                | 2-3 months | 🚧   |        |
-| **🔩 Item API**                          | 1-2 months | 🚧   |        |
 | **🧱 Block API**                         | 1-2 months | 🚧   |        |
-| **📦 Inventory API**                     | 2-3 months | ⏳    |        |
+| **📦 Item & Inventory API**              | 2-3 months | 🚧   |        |
 | **⭐ Advanced Features & Refinements**    | 4-6 months | ⏳    |        |
 | **🔬 Beta Testing & Community Feedback** | 3 months   | ⏳    |        |
 | **🚀 Official Release & Support**        | -          | ⏳    |        |

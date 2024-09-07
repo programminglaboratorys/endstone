@@ -67,7 +67,7 @@ public:
     [[nodiscard]] Dimension &getDimension() const override;
     void setRotation(float yaw, float pitch) override;
     void teleport(Location location) override;
-    void teleport(Actor& target) override;
+    void teleport(Actor &target) override;
     [[nodiscard]] std::int64_t getId() const override;
     [[nodiscard]] bool isDead() const override;
 
@@ -123,6 +123,7 @@ public:
         std::variant<const ::ConnectionRequest *, const ::SubClientConnectionRequest *> request);
     void disconnect();
     void updateAbilities() const;
+    bool checkRightClickSpam(Vector<int> block_pos, Vector<float> click_pos);
     [[nodiscard]] ::Player &getHandle() const;
 
 private:

@@ -19,4 +19,4 @@
 void BlockTypeRegistry::forEachBlock(std::function<bool(const BlockLegacy &)> callback)
 {
     ENDSTONE_HOOK_CALL_ORIGINAL(&BlockTypeRegistry::forEachBlock, std::move(callback));
-};
+}

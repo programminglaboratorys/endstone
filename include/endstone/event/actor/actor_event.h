@@ -28,7 +28,7 @@ public:
     ~ActorEvent() override = default;
 
     /**
-     * Returns the Actor involved in this event
+     * @brief Returns the Actor involved in this event
      *
      * @return Actor which is involved in this event
      */

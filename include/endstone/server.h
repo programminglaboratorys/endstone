@@ -20,6 +20,7 @@
 #include <string_view>
 #include <vector>
 
+#include "endstone/block/block_data.h"
 #include "endstone/boss/boss_bar.h"
 #include "endstone/level/level.h"
 #include "endstone/logger.h"
@@ -216,13 +217,13 @@ public:
     [[nodiscard]] virtual Scoreboard *getScoreboard() const = 0;
 
     /**
-     * Gets a new Scoreboard to be tracked by the server.
+     * @brief Creates a new Scoreboard to be tracked by the server.
      * <p>
      * This will not be saved by the server and is not affected by the /scoreboard command.
      *
      * @return the newly created Scoreboard
      */
-    [[nodiscard]] virtual std::shared_ptr<Scoreboard> getNewScoreboard() = 0;
+    [[nodiscard]] virtual std::shared_ptr<Scoreboard> createScoreboard() = 0;
 
     /**
      * @brief Gets the current milliseconds per tick (MSPT).
@@ -273,7 +274,8 @@ public:
      * @param style the style of the boss bar
      * @return the created boss bar
      */
-    [[nodiscard]] virtual std::unique_ptr<BossBar> createBossBar(std::string title, BarColor color, BarStyle style) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<BossBar> createBossBar(std::string title, BarColor color,
+                                                                 BarStyle style) const = 0;
 
     /**
      * @brief Creates a boss bar instance to display to players. The progress defaults to 1.0.
@@ -286,6 +288,25 @@ public:
      */
     [[nodiscard]] virtual std::unique_ptr<BossBar> createBossBar(std::string title, BarColor color, BarStyle style,
                                                                  std::vector<BarFlag> flags) const = 0;
+
+    /**
+     * @brief Creates a new BlockData instance for the specified block type, with all properties initialized to defaults.
+     *
+     * @param type the block type
+     * @return new data instance
+     */
+    [[nodiscard]] virtual std::shared_ptr<BlockData> createBlockData(std::string type) const = 0;
+
+    /**
+     * @brief Creates a new BlockData instance for the specified block type, with all properties initialized to defaults,
+     * except for those provided in data.
+     *
+     * @param type the block type
+     * @param block_states block states, for example {"old_leaf_type":"birch", "persistent_bit":true}
+     * @return new data instance
+     */
+    [[nodiscard]] virtual std::shared_ptr<BlockData> createBlockData(std::string type,
+                                                                     BlockStates block_states) const = 0;
 
     /**
      * @brief Gets the start time of the server.

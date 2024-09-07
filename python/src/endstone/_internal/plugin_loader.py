@@ -1,16 +1,18 @@
 import glob
 import importlib
-import os.path
-import site
 import os
+import os.path
+import shutil
+import site
 import subprocess
 import sys
-from importlib_metadata import entry_points, metadata
 from typing import List
+
 from endstone import Server
 from endstone.command import Command
 from endstone.permissions import Permission, PermissionDefault
 from endstone.plugin import PluginDescription, PluginLoader, Plugin, PluginLoadOrder
+from importlib_metadata import entry_points, metadata
 
 __all__ = ["PythonPluginLoader"]
 
@@ -73,6 +75,9 @@ class PythonPluginLoader(PluginLoader):
         env = os.environ.copy()
         env.pop("LD_PRELOAD", "")
 
+        prefix = os.path.join(directory, ".local")
+        shutil.rmtree(prefix, ignore_errors=True)
+
         for file in glob.glob(os.path.join(directory, "*.whl")):
             subprocess.run(
                 [
@@ -81,7 +86,8 @@ class PythonPluginLoader(PluginLoader):
                     "pip",
                     "install",
                     file,
-                    "--user",
+                    "--prefix",
+                    prefix,
                     "--quiet",
                     "--no-warn-script-location",
                     "--disable-pip-version-check",
@@ -89,9 +95,8 @@ class PythonPluginLoader(PluginLoader):
                 env=env,
             )
 
-        user_site_packages = site.getusersitepackages()
-        if user_site_packages not in sys.path:
-            sys.path.insert(0, user_site_packages)
+        for site_dir in site.getsitepackages(prefixes=[prefix]):
+            site.addsitedir(site_dir)
 
         loaded_plugins = []
         eps = entry_points(group="endstone")
