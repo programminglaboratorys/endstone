@@ -41,7 +41,9 @@ class EndstoneRecipe(ConanFile):
 
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "tests/*"
 
-    def set_version(self):
+    def set_version(self) -> str:
+        self.version = "v0.5.1"
+        return
         if self.version:
             return
 
