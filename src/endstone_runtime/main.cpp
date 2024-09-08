@@ -59,13 +59,23 @@ ENDSTONE_RUNTIME_CTOR int main()
         auto thread = std::thread(&endstone::detail::devtools::render);
         thread.detach();
 #endif
-        return 0;
     }
     catch (const std::exception &e) {
         logger.error("An exception occurred while initialising Endstone runtime.");
         logger.error("{}", e.what());
         throw e;
     }
+    auto &logger2 = endstone::detail::LoggerFactory::getLogger("EndstoneLuaRuntime");
+    try {
+        logger2.info("Initialising...");
+        logger2.error("NOT IMPLEMENTED YET");
+    }
+    catch (const std::exception &e) {
+        logger2.error("An exception occurred while initialising Endstone runtime.");
+        logger2.error("{}", e.what());
+        throw e;
+    }
+
 }
 
 #ifdef _WIN32
